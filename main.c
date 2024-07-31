@@ -134,24 +134,13 @@ int	ft_close(int keycode, void *dd)
 	return (1);
 }
 
-void	ft_Display(t_list *head)
-{
-	while (head)
-	{
-		printf("%s\n", (char *)head->content);
-		head = head->next;
-	}
-}
-
 int	main(int ac, char **av)
 {
 	t_map	map;
 
 	// t_data	data;
 	// char	**map;
-	map.color = NULL;
-	map.path = NULL;
-	map.map = NULL;
+	map.color = 0;
 	(void)ac;
 	(void)map;
 	(void)av;
@@ -161,15 +150,12 @@ int	main(int ac, char **av)
 	// save_pos(&data, map);
 	// data.size = 10;
 	// data.map = map;
-	ft_Read_Map(av[1], &map);
-	ft_Display(map.path);
-	ft_Display(map.color);
-	ft_Display(map.map);
-	exit(0);
-	// ft_Display(*map.map);
-	// printf("%d\n", ft_parse_path(&map.path));
-	// ft_Display(map.path);
-	// ft_Display(map.map);
+	if (ft_Read_Map(av[1], &map) != 17)
+	{
+		printf("Error\n");
+		return (2);
+	}
+	printf("%d Good Job\n", map.color);
 	// data.mlx = mlx_init();
 	// data.win = mlx_new_window(data.mlx, (53 * 10), (28 * 10), "cub_ 3D!");
 	// mlx_hook(data.win, 2, 1L << 0, ft_close, &data);
