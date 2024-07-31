@@ -12,15 +12,6 @@
 
 #include "ft_cub3d.h"
 
-void	ft_Display(t_list *head)
-{
-	while (head)
-	{
-		printf("%s\n", (char *)head->content);
-		head = head->next;
-	}
-}
-
 void	ft_print(char **str)
 {
 	int	i;
@@ -39,22 +30,19 @@ char	*ft_join(char *str, int max)
 	char	*arr;
 	int		len;
 
-	len = ft_strlen(str);
 	i = 0;
+	len = ft_strlen(str);
 	arr = malloc(sizeof(char *) * (max + 1));
 	while (str[i] || i < max)
 	{
-		if (i < len)
-			arr[i] = str[i];
-		else
-			arr[i] = ' ';
+		arr[i] = (i < len) * str[i] + (!(i < len) * 32);
 		i++;
 	}
 	arr[i] = 0;
-	return (arr);
+	return (free(str), arr);
 }
 
-int	ft_CheckPath(char *file, char *ex)
+int	ChPath(char *file, char *ex)
 {
 	int	fd;
 	int	res;
@@ -93,7 +81,7 @@ int	ft_print_err(int er)
 	return (er);
 }
 
-void	ft_free(char **str)
+int	ft_free(char **str)
 {
 	int	i;
 
@@ -101,20 +89,7 @@ void	ft_free(char **str)
 	while (str[++i])
 		free(str[i]);
 	free(str);
-}
-
-char	*ft_return(char *str)
-{
-	int	i;
-
-	i = 0;
-	while (str[i])
-	{
-		if (ft_isdigit(str[i]))
-			return (&str[i]);
-		i++;
-	}
-	return (str);
+	return (0);
 }
 
 int	ft_count(char **ss)
@@ -127,7 +102,7 @@ int	ft_count(char **ss)
 	return (i);
 }
 
-int	ft_check_num(char *num, t_map *map)
+int	ft_check_num(char *num, int *color)
 {
 	char	**ss;
 	int		count;
@@ -143,22 +118,19 @@ int	ft_check_num(char *num, t_map *map)
 		if (!i)
 		{
 			child = ft_split(ss[i], ' ');
-			n = ft_atoi(child[1]);
-			if (ft_count(child) != 2 || n > 255)
+			if (ft_count(child) != 2 || ft_atoi(child[1]) > 255)
 				count++;
-			map->color += n * 65536;
-			i++;
-			ft_free(child);
+			*color += ft_atoi(child[1]) * 65536;
 		}
 		else
 		{
 			n = ft_atoi(ss[i]);
-			map->color += (i == 1) * (n * 256) + (i != 1) * n;
+			*color += (i == 1) * (n * 256) + (i != 1) * n;
 			count += ((n <= 255) * 0 + (n > 255) * 1);
 		}
 		i++;
 	}
-	return (ft_free(ss), count);
+	return (ft_free(child), ft_free(ss), count);
 }
 
 int	ft_check_char(char *str, t_map *map)
@@ -173,41 +145,53 @@ int	ft_check_char(char *str, t_map *map)
 	{
 		if (!ft_strchr("0123456789 ,CF", str[i]))
 			count++;
-		if ((ft_strchr("C,", str[i]) && count++) || (str[i] == 'F' && (count
-					+= 2)))
-			count *= 1;
+		if (ft_strchr("C,", str[i]) || (str[i] == 'F' && ++count))
+			count++;
 		i++;
 	}
 	tr = ft_strtrim(str, " ");
-	count = ft_check_num(tr, map) + count;
+	if (count == 3)
+		count += ft_check_num(tr, &map->C);
+	else
+		count += ft_check_num(tr, &map->F);
 	return (free(tr), count);
 }
 
-int	ft_path(char *str)
+int	ft_path(char *str, t_map *map)
 {
-	char	**split;
+	char	**ss;
 	int		flag;
 
 	flag = 0;
-	split = ft_split(str, ' ');
-	if (!strcmp(split[0], "NO") && !ft_CheckPath(split[1], ".xpm"))
-		flag += 1;
-	else if (!strcmp(split[0], "SO") && !ft_CheckPath(split[1], ".xpm"))
-		flag += 2;
-	else if (!strcmp(split[0], "WE") && !ft_CheckPath(split[1], ".xpm"))
-		flag += 3;
-	else if (!strcmp(split[0], "EA") && !ft_CheckPath(split[1], ".xpm"))
-		flag += 4;
-	return (flag);
+	ss = ft_split(str, ' ');
+	if (!ss[1])
+		return (-20);
+	if (!strcmp(ss[0], "NO") && !ChPath(ss[1], ".xpm") && ++flag)
+		map->NO = ft_strdup(ss[1]);
+	else if (!strcmp(ss[0], "SO") && !ChPath(ss[1], ".xpm") && (flag += 2))
+		map->SO = ft_strdup(ss[1]);
+	else if (!strcmp(ss[0], "WE") && !ChPath(ss[1], ".xpm") && (flag += 3))
+		map->WE = ft_strdup(ss[1]);
+	else if (!strcmp(ss[0], "EA") && !ChPath(ss[1], ".xpm") && (flag += 4))
+		map->EA = ft_strdup(ss[1]);
+	return (ft_free(ss), flag);
 }
 
 int	Check_space(char **map, int i, int j)
 {
-	if ((!map[i][j + 1] || ft_strchr("1 ", map[i][j + 1])) && (!j
-			|| ft_strchr("1 ", map[i][j - 1])) && (!i || ft_strchr("1 ", map[i
-				- 1][j])) && (!map[i + 1] || ft_strchr("1 ", map[i + 1][j])))
-		return (1);
-	return (0);
+
+	int count  = 0;
+	char c = map[i][j];
+	
+	if (c == ' '  && !((!map[i][j] || ft_strchr("1 " , map[i][j + 1])) && (!j || ft_strchr("1 " , map[i][j - 1])) && ( !map[i + 1] || ft_strchr("1 " , map[i + 1][j])) && (!i || ft_strchr("1 " , map[i - 1][j]))))
+		count++;
+	else if(!i || !map[i + 1])
+		count += !ft_strchr("1 " , c);
+	else if(!j || !map[i][j + 1])
+		count += !ft_strchr("1 " , c) ;
+	else
+		count += ft_strchr("NOSE" , c) + ((j == 0) * ft_strchr("1 " , c))  ;
+	return (count );
 }
 
 int	ft_parse_map(char **map)
@@ -224,18 +208,14 @@ int	ft_parse_map(char **map)
 		j = 0;
 		while (map[i][j])
 		{
-			if ((((!i || !map[i + 1]) || (!j || !map[i][j + 1]))
-					&& !ft_strchr("1 ", map[i][j])) || ft_strchr("NOSE",
-					map[i][j]))
-				count++;
-			if (map[i][j] == ' ' && !Check_space(map, i, j)
-				&& ft_strchr("NOSE 01", map[i][j]))
-				return (1);
+			// count  += ft_strchr("NOSE", map[i][j]) ;
+			count += Check_space(map, i, j);
 			j++;
 		}
 		i++;
 	}
-	return ((count == 1) * 0 + (count != 1) * 1);
+	count = (count == 1) * 0 + (count != 1) * 1;
+	return (ft_free(map), count);
 }
 
 char	**ft_convertt(char *str)
@@ -244,7 +224,6 @@ char	**ft_convertt(char *str)
 	int		num;
 	char	**ss;
 	int		max;
-	char	*save;
 
 	i = 0;
 	ss = ft_split(str, '\n');
@@ -259,9 +238,7 @@ char	**ft_convertt(char *str)
 	i = 0;
 	while (ss[i])
 	{
-		save = ss[i];
 		ss[i] = ft_join(ss[i], max);
-		free(save);
 		i++;
 	}
 	return (ss);
@@ -274,27 +251,27 @@ int	ft_Read_Map(char *file, t_map *map)
 	int		count;
 	char	*join;
 
-	(void)map;
-	join = NULL;
 	count = 0;
-	if (ft_print_err(ft_CheckPath(file, ".cub")))
+	if (ft_print_err(ChPath(file, ".cub")))
 		return (1);
-	rd_file = ft_split(get_next_line(file), 10);
+	join = get_next_line(file);
+	rd_file = ft_split(join, '\n');
+	free(join);
+	join = NULL;
 	i = 0;
 	while (rd_file && rd_file[i])
 	{
 		strtrim = ft_strtrim(rd_file[i], " ");
 		if (ft_strchr(rd_file[i], '.'))
-			count += ft_path(rd_file[i]);
+			count += ft_path(rd_file[i], map);
 		else if (ft_strchr(rd_file[i], ','))
 			count += ft_check_char(rd_file[i], map);
 		else if (*strtrim)
-		{
 			join = ft_strjoin(join, rd_file[i]);
-			join = ft_strjoin(join, "\n");
-		}
+		join = ft_strjoin(join, "\n");
 		free(strtrim);
 		i++;
 	}
-	return (count + ft_parse_map(ft_convertt(join)));
+	count += ft_parse_map(ft_convertt(join)) + ft_free(rd_file);
+	return (free(join), (count == 17) * 0 + (count != 17) * 1);
 }

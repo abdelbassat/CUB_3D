@@ -38,18 +38,19 @@ typedef struct s_data
 
 typedef struct s_map
 {
-	int color ;
+	int F;
+	int C;
 	char	**map;
+	char *SO;
+	char *EA;
+	char *WE;
+	char *NO;
 
 }			t_map;
 
 int 		ft_Read_Map(char *file, t_map *map);
 char	*ft_join(char *str, int max);
-int			ft_parse_color(t_list *map);
-int			ft_parse_path(t_list *pp);
 int			ft_parse_map(char **map);
-char		**ft_convert(t_list *head);
 void		ft_print(char **str);
-void		ft_Display(t_list *head);
 
 #endif

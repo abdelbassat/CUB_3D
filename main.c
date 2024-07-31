@@ -140,22 +140,28 @@ int	main(int ac, char **av)
 
 	// t_data	data;
 	// char	**map;
-	map.color = 0;
-	(void)ac;
-	(void)map;
-	(void)av;
+	map.C = 0;
+	map.F = 0;
 	// (void)av;
 	// data.pos.pos_x = 0;
 	// data.pos.pos_y = 0;
 	// save_pos(&data, map);
 	// data.size = 10;
 	// data.map = map;
-	if (ft_Read_Map(av[1], &map) != 17)
+	if (ac != 2 || ft_Read_Map(av[1], &map))
 	{
 		printf("Error\n");
 		return (2);
 	}
-	printf("%d Good Job\n", map.color);
+	printf("EA = %s\n", map.EA);
+	printf("WE = %s\n", map.WE);
+	printf("NO = %s\n", map.NO);
+	printf("SO = %s\n", map.SO);
+	printf("C = %d\nF = %d \n", map.C, map.F);
+	free(map.EA);
+	free(map.WE);
+	free(map.NO);
+	free(map.SO);
 	// data.mlx = mlx_init();
 	// data.win = mlx_new_window(data.mlx, (53 * 10), (28 * 10), "cub_ 3D!");
 	// mlx_hook(data.win, 2, 1L << 0, ft_close, &data);

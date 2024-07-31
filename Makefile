@@ -17,7 +17,7 @@ all: $(NAME)
 	@rm -rf *.o
 
 $(NAME): $(OBJECTS)  $(OBJECTS_LIBFT)
-	@$(CC) $(OBJECTS)  $(MLX) $(OBJECTS_LIBFT) $(libft)   -g3  -o $(NAME)
+	@$(CC) $(OBJECTS)  $(MLX) $(OBJECTS_LIBFT) $(libft)    -o $(NAME)
 
 %.o: %.c
 	@$(CC) $(MLX) $(CFLAGS) -c -o $@ $< 
