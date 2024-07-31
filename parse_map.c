@@ -72,6 +72,26 @@ char	*get_next_line(char *file)
 	return (free(buff), close(fd), data);
 }
 
+int	ft_jock(char **str, int flag)
+{
+	int	i;
+
+	i = 0;
+	if (!flag)
+	{
+		while (str[i])
+			free(str[i++]);
+		free(str);
+		i = 0;
+	}
+	else
+	{
+		while (str[i])
+			i++;
+	}
+	return (i);
+}
+
 int	ft_print_err(int er)
 {
 	if (er == -1)
@@ -79,27 +99,6 @@ int	ft_print_err(int er)
 	else if (er == -2)
 		ft_putstr_fd("extention Error\n", 2);
 	return (er);
-}
-
-int	ft_free(char **str)
-{
-	int	i;
-
-	i = -1;
-	while (str[++i])
-		free(str[i]);
-	free(str);
-	return (0);
-}
-
-int	ft_count(char **ss)
-{
-	int	i;
-
-	i = 0;
-	while (ss[i])
-		i++;
-	return (i);
 }
 
 int	ft_check_num(char *num, int *color)
@@ -112,13 +111,13 @@ int	ft_check_num(char *num, int *color)
 
 	i = 0;
 	ss = ft_split(num, ',');
-	count = (ft_count(ss) == 3) * 0 + ((ft_count(ss) != 3) * 10);
+	count = (ft_jock(ss, 2) == 3) * 0 + ((ft_jock(ss, 2) != 3) * 10);
 	while (ss[i] && !count)
 	{
 		if (!i)
 		{
 			child = ft_split(ss[i], ' ');
-			if (ft_count(child) != 2 || ft_atoi(child[1]) > 255)
+			if (ft_jock(child, 2) != 2 || ft_atoi(child[1]) > 255)
 				count++;
 			*color += ft_atoi(child[1]) * 65536;
 		}
@@ -130,7 +129,8 @@ int	ft_check_num(char *num, int *color)
 		}
 		i++;
 	}
-	return (ft_free(child), ft_free(ss), count);
+	count = count + ft_jock(child, 0) + ft_jock(ss, 0);
+	return (count);
 }
 
 int	ft_check_char(char *str, t_map *map)
@@ -174,24 +174,27 @@ int	ft_path(char *str, t_map *map)
 		map->WE = ft_strdup(ss[1]);
 	else if (!strcmp(ss[0], "EA") && !ChPath(ss[1], ".xpm") && (flag += 4))
 		map->EA = ft_strdup(ss[1]);
-	return (ft_free(ss), flag);
+	flag = flag + ft_jock(ss, 0);
+	return (flag);
 }
 
 int	Check_space(char **map, int i, int j)
 {
+	int		count;
+	char	c;
 
-	int count  = 0;
-	char c = map[i][j];
-	
-	if (c == ' '  && !((!map[i][j] || ft_strchr("1 " , map[i][j + 1])) && (!j || ft_strchr("1 " , map[i][j - 1])) && ( !map[i + 1] || ft_strchr("1 " , map[i + 1][j])) && (!i || ft_strchr("1 " , map[i - 1][j]))))
+	count = 0;
+	c = map[i][j];
+	if (c == ' ' && !((!map[i][j] || ft_strchr("1 ", map[i][j + 1])) && (!j
+				|| ft_strchr("1 ", map[i][j - 1])) && (!map[i + 1]
+				|| ft_strchr("1 ", map[i + 1][j])) && (!i || ft_strchr("1 ",
+					map[i - 1][j]))))
 		count++;
-	else if(!i || !map[i + 1])
-		count += !ft_strchr("1 " , c);
-	else if(!j || !map[i][j + 1])
-		count += !ft_strchr("1 " , c) ;
+	else if (!j || !map[i][j + 1] || !i || !map[i + 1])
+		count += !ft_strchr("1 ", c);
 	else
-		count += ft_strchr("NOSE" , c) + ((j == 0) * ft_strchr("1 " , c))  ;
-	return (count );
+		count += ft_strchr("NOSE", c);
+	return (count);
 }
 
 int	ft_parse_map(char **map)
@@ -208,14 +211,13 @@ int	ft_parse_map(char **map)
 		j = 0;
 		while (map[i][j])
 		{
-			// count  += ft_strchr("NOSE", map[i][j]) ;
 			count += Check_space(map, i, j);
 			j++;
 		}
 		i++;
 	}
-	count = (count == 1) * 0 + (count != 1) * 1;
-	return (ft_free(map), count);
+	count = ((count == 1) * 0 + (count != 1) * 1) + ft_jock(map, 0);
+	return (count);
 }
 
 char	**ft_convertt(char *str)
@@ -272,6 +274,7 @@ int	ft_Read_Map(char *file, t_map *map)
 		free(strtrim);
 		i++;
 	}
-	count += ft_parse_map(ft_convertt(join)) + ft_free(rd_file);
+	map->map = ft_split(join, '\n');
+	count += ft_parse_map(ft_convertt(join)) + ft_jock(rd_file, 0);
 	return (free(join), (count == 17) * 0 + (count != 17) * 1);
 }
