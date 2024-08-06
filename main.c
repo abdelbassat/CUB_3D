@@ -12,6 +12,14 @@
 
 #include "ft_cub3d.h"
 
+void	my_mlx_pixel_put(t_img *data, int x, int y, int color)
+{
+	char	*dst;
+
+	dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
+	*(unsigned int *)dst = color;
+}
+
 void	ft_draw(t_data *data, int i, int j, int color)
 {
 	int	x;
@@ -26,53 +34,119 @@ void	ft_draw(t_data *data, int i, int j, int color)
 		y = 0;
 		while (y < data->size)
 		{
-			if (color == 0x1EABB7)
-				co = 0xdddd;
-			else
-				co = 0x239E37;
-			mlx_pixel_put(data->mlx, data->win, x + i, j + y, co);
+			co = color;
+			if (!y || !x || y + 1 == data->size || x + 1 == data->size)
+				co = 11;
+			my_mlx_pixel_put(&data->img, x + i, j + y, co);
 			y++;
 		}
 		x++;
 	}
 }
 
-char	**convert_to_do(t_list *head)
+void	dda_alg(t_data *data, double x, double y, double x0, double y0)
 {
-	int		size;
-	char	**arr;
+	int		res;
+	double	yi;
+	double	xi;
 	int		i;
 
-	size = ft_lstsize(head);
-	arr = (char **)malloc(sizeof(char *) * (size + 1));
+	double a, b;
+	int dx, dy;
+	dx = x0 - x;
+	dy = y0 - y;
+	res = (abs(dx) > abs(dy)) * abs(dx) + !(abs(dx) > abs(dy)) * abs(dy);
+	yi = dy / (double)res;
+	xi = dx / (double)res;
+	a = x;
+	b = y;
 	i = 0;
-	while (head)
+	while (i <= res)
 	{
-		arr[i] = ft_strdup((char *)head->content);
+		my_mlx_pixel_put(&data->img, a, b, 15212062);
+		a += xi;
+		b += yi;
 		i++;
-		head = head->next;
 	}
-	arr[i] = NULL;
-	return (arr);
 }
 
-void	ft_creat_2d(t_data *data, char **map)
+void	ft_draw_angel(t_data *data)
+{
+	double	res;
+	double	x;
+	double	y;
+
+	res = cos(data->p.rotaion);
+	x = data->p.x + res * 30;
+	res = sin(data->p.rotaion);
+	y = data->p.y + res * 30;
+	// printf("x == %f   -- y == %f   angel == %f\n", x, y, data->p.rotaion);
+	dda_alg(data, data->p.x, data->p.y, x, y);
+	// int i = 45;
+	// int j = 0;
+	// while(j < i)
+	// {
+	// 	dda_alg(data, data->p.x, data->p.y, x + (-1) * j, y);
+	// 	j++;
+	// }
+	// while (j < 30)
+	// {
+	// 	mlx_pixel_put(data->mlx, data->win, x, y - j, 15212062);
+	// 	j++;
+	// }
+	//  ft_draw_line(data ,  x + 5 ,  y, 20 );
+	// int i = 45;
+	// int k = 0;
+	// while(k < i)
+	// {
+	// 	mlx_pixel_put(data->mlx, data->win, data->p.x + 5 + (k * -1) ,
+	// 			data->p.y  + (j * -1), 15212062);
+	// // 	mlx_pixel_put(data->mlx, data->win, data->p.x + 5 + k , data->p.y
+	// + (j
+	// 				* -1), 15212062);
+	// k++;
+	// }
+}
+
+void	ft_draw_palyer(t_data *data)
 {
 	int	i;
 	int	j;
-	int	color;
 
+	(void)data;
 	i = 0;
 	j = 0;
+	while (i < 10)
+	{
+		j = 0;
+		while (j < 10)
+		{
+			my_mlx_pixel_put(&data->img, data->p.x + j - 5, i + data->p.y - 5, 143062);
+			j++;
+		}
+		i++;
+	}
+}
+
+void	ft_creat_2d(t_data *data)
+{
+	int		i;
+	int		j;
+	int		color;
+	char	c;
+	char	**map;
+
+	map = data->mm.map;
 	color = 0;
+	i = 0;
 	while (map[i])
 	{
 		j = 0;
 		while (map[i][j])
 		{
-			color = 0;
-			if (j == data->pos.pos_x && i == data->pos.pos_y)
-				color = 0x1EABB7;
+			c = map[i][j];
+			color = (c == '1') * 4210752 + (c == '0') * 14012110;
+			color += (c == ' ') * 10472114 + ft_strchr("NOSE", c) * 14831182;
 			ft_draw(data, j * data->size, i * data->size, color);
 			j++;
 		}
@@ -80,91 +154,127 @@ void	ft_creat_2d(t_data *data, char **map)
 	}
 }
 
-void	save_pos(t_data *data, char **map)
+int	check_wall(t_data *data)
 {
-	int	i;
-	int	j;
+	char	**map;
 
-	i = 0;
-	j = 0;
-	while (map[i])
-	{
-		j = 0;
-		while (map[i][j])
-		{
-			if (map[i][j] == 'N')
-			{
-				data->pos.pos_x = j;
-				data->pos.pos_y = i;
-				return ;
-			}
-			j++;
-		}
-		i++;
-	}
+	map = data->mm.map;
+	int i, j;
+	j = (data->p.x) / data->size;
+	i = (data->p.y) / data->size;
+	if (i < 0 || j < 0 || i > 6 || j > 15 || map[i][j] != '0')
+		return (1);
+	return (0);
 }
 
-int	ft_close(int keycode, void *dd)
+int ft_release(int ky, void *dd)
 {
-	t_data	*data;
-	int		x;
-	int		y;
+	t_data *data;
 
 	data = (t_data *)dd;
-	x = data->pos.pos_x;
-	y = data->pos.pos_y;
-	if (keycode == 65307)
+	if (ky == 'w')
+		data->keys[0] = 0;
+	if (ky == 'a')
+		data->keys[1] = 0;
+	return 0;
+}
+
+int ft_press(int ky, void *dd)
+{
+	t_data *data;
+
+	data = (t_data *)dd;
+	if (ky == 'w')
+		data->keys[0] = 1;
+	if (ky == 'a')
+		data->keys[1] = 1;
+
+	int		px;
+	int		py;
+
+
+	px = data->p.x;
+	py = data->p.y;
+	if (ky == 65307)
 		exit(11);
-	if (keycode == 65363)
-		data->pos.pos_x += 1;
-	if (keycode == 65361)
-		data->pos.pos_x -= 1;
-	if (keycode == 65362)
-		data->pos.pos_y -= 1;
-	if (keycode == 65364)
-		data->pos.pos_y += 1;
-	if (data->pos.pos_x >= 53 || data->pos.pos_y >= 28 || data->pos.pos_y < 0
-		|| data->pos.pos_x < 0)
+	data->p.x += ((ky == 'd') * 4 + (ky == 'a') * (-4)) ;
+	data->p.y += ((ky == 's') * 4 + (ky == 'w') * (-4)) ;
+	data->p.rotaion += (ky == 65363) * 0.139626 + (ky == 65361) * 0.139626 * (-1);
+
+	if(check_wall(data))
 	{
-		data->pos.pos_x = x;
-		data->pos.pos_y = y;
-		return (0);
+		data->p.x = px;
+		data->p.y = py;
 	}
-	ft_creat_2d(data, data->map);
-	return (1);
+	return 0;
+}
+
+
+void	ft_events(t_data *data)
+{
+	(void)data;
+	// printf("[%d|%d]\n", data->keys[0], data->keys[1]);
+}
+
+
+int ft_render(void *dd)
+{
+	t_data *data = dd;
+	data->img.img = mlx_new_image(data->mlx, 1920, 1080);
+	data->img.addr = mlx_get_data_addr(data->img.img, &data->img.bits_per_pixel, &data->img.line_length, &data->img.endian);
+	ft_creat_2d(data);
+	ft_draw_palyer(data);
+	ft_draw_angel(data);
+	ft_events(data);
+	
+	mlx_put_image_to_window(data->mlx, data->win, data->img.img, 0, 0);
+
+	return 0;
 }
 
 int	main(int ac, char **av)
 {
-	t_map	map;
+	t_map		map;
+	t_data		data;
+	t_player	p;
+	double		pi;
+	// t_img		img;
 
-	// t_data	data;
-	// char	**map;
+	data.keys[0] = 0;
+	data.keys[1] = 0;
 	map.C = 0;
 	map.F = 0;
-	// (void)av;
-	// data.pos.pos_x = 0;
-	// data.pos.pos_y = 0;
-	// save_pos(&data, map);
-	// data.size = 10;
-	// data.map = map;
+	map.x = 0;
+	map.y = 0;
+	map.x_win = 0;
+	map.y_win = 0;
+	data.size = 64;
+	data.x_line = 0;
+	data.y_line = 0;
+	data.ac = 0;
 	if (ac != 2 || ft_Read_Map(av[1], &map))
 	{
 		printf("Error\n");
 		return (2);
 	}
-	printf("EA = %s\n", map.EA);
-	printf("WE = %s\n", map.WE);
-	printf("NO = %s\n", map.NO);
-	printf("SO = %s\n", map.SO);
-	printf("C = %d\nF = %d \n", map.C, map.F);
-	free(map.EA);
-	free(map.WE);
-	free(map.NO);
-	free(map.SO);
-	// data.mlx = mlx_init();
-	// data.win = mlx_new_window(data.mlx, (53 * 10), (28 * 10), "cub_ 3D!");
-	// mlx_hook(data.win, 2, 1L << 0, ft_close, &data);
-	// ft_creat_2d(&data, map);
-	// mlx_loop(data.mlx);
+	pi = 3.14159;
+	p.x = map.x * data.size - 16;
+	p.y = map.y * data.size - 16;
+	p.rotaion = (90) * (pi / 180);
+	p.turnDer = 0;
+	p.movespeed = 3.0;
+	p.rot_speed = 2 * (pi / 180.0);
+	data.p = p;
+	data.x_win = map.x_win * data.size;
+	data.y_win = map.y_win * data.size;
+	data.mm = map;
+	data.p.x -= 20;
+	data.p.y -= 20;
+	data.mlx = mlx_init();
+	data.win = mlx_new_window(data.mlx, data.x_win, data.y_win, "cub_ 3D!");
+	mlx_hook(data.win, 3, 1L << 1, ft_release, &data);
+	mlx_hook(data.win, 2, 1L << 0, ft_press, &data);
+	// data.img = img;
+	mlx_loop_hook(data.mlx, ft_render, &data);
+	mlx_loop(data.mlx);
 }

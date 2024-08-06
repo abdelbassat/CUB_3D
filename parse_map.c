@@ -193,7 +193,10 @@ int	Check_space(char **map, int i, int j)
 	else if (!j || !map[i][j + 1] || !i || !map[i + 1])
 		count += !ft_strchr("1 ", c);
 	else
+	{
+		map[i][j] = (ft_strchr("NOSE", c) * '0' + !ft_strchr("NOSE", c) * c);
 		count += ft_strchr("NOSE", c);
+	}
 	return (count);
 }
 
@@ -216,11 +219,24 @@ int	ft_parse_map(char **map)
 		}
 		i++;
 	}
-	count = ((count == 1) * 0 + (count != 1) * 1) + ft_jock(map, 0);
+	count = ((count == 1) * 0 + (count != 1) * 1);
 	return (count);
 }
 
-char	**ft_convertt(char *str)
+void	ft_pos(char *str, t_map *map, int j)
+{
+	int	i;
+
+	i = 0;
+	while (str[i])
+	{
+		if (ft_strchr("NOSE", str[i]) && (map->x = i + 1) && (map->y = j + 1))
+			break ;
+		i++;
+	}
+}
+
+char	**ft_convertt(char *str, t_map *map)
 {
 	int		i;
 	int		num;
@@ -241,8 +257,11 @@ char	**ft_convertt(char *str)
 	while (ss[i])
 	{
 		ss[i] = ft_join(ss[i], max);
+		ft_pos(ss[i], map, i);
 		i++;
 	}
+	map->x_win = max;
+	map->y_win = i;
 	return (ss);
 }
 int	ft_Read_Map(char *file, t_map *map)
@@ -274,7 +293,7 @@ int	ft_Read_Map(char *file, t_map *map)
 		free(strtrim);
 		i++;
 	}
-	map->map = ft_split(join, '\n');
-	count += ft_parse_map(ft_convertt(join)) + ft_jock(rd_file, 0);
+	map->map = ft_convertt(join, map);
+	count += ft_parse_map(map->map) + ft_jock(rd_file, 0);
 	return (free(join), (count == 17) * 0 + (count != 17) * 1);
 }

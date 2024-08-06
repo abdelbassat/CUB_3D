@@ -16,41 +16,78 @@
 # include "libft/libft.h"
 # include "minilibx-linux/mlx.h"
 # include <fcntl.h>
+# include <math.h>
 # include <stdio.h>
-
 typedef struct s_pos
 {
-	int		pos_x;
-	int		pos_y;
+	int			pos_x;
+	int			pos_y;
 
-}			t_pos;
+}				t_pos;
 
-typedef struct s_data
+typedef struct s_player
 {
-	void	*mlx;
-	void	*win;
-	void	*img;
-	char	**map;
-	int		size;
-	t_pos	pos;
+	double			x;
+	double			y;
+	double rotaion;
+	double turnDer;
+	double movespeed ;
+	double rot_speed;
 
-}			t_data;
+}				t_player;
 
 typedef struct s_map
 {
-	int F;
-	int C;
-	char	**map;
-	char *SO;
-	char *EA;
-	char *WE;
-	char *NO;
+	int			F;
+	int			C;
+	int			x;
+	int			y;
+	int			x_win;
+	int			y_win;
+	char		**map;
+	char		*SO;
+	char		*EA;
+	char		*WE;
+	char		*NO;
 
-}			t_map;
+}				t_map;
 
-int 		ft_Read_Map(char *file, t_map *map);
-char	*ft_join(char *str, int max);
-int			ft_parse_map(char **map);
-void		ft_print(char **str);
+typedef struct s_img
+{
+	void	*img;
+	char	*addr;
+	int		bits_per_pixel;
+	int		line_length;
+	int		endian;
+
+}				t_img;
+
+typedef struct s_data
+{
+	int x_line;
+	int y_line;
+	int keys[2];
+	int			x_win;
+	int			y_win;
+	void		*mlx;
+	void		*win;
+	// char		*img;
+	int ac;
+	int			size;
+	double eng;
+
+	int		bpp; /* bits per pixel */
+    int		line_len;
+	t_map		mm;
+	t_player	p;
+	t_img img;
+
+}				t_data;
+
+int				ft_Read_Map(char *file, t_map *map);
+char			*ft_join(char *str, int max);
+int				ft_parse_map(char **map);
+void			ft_print(char **str);
+int				ft_jock(char **str, int flag);
 
 #endif
