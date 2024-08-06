@@ -195,12 +195,10 @@ int	ft_press(int ky, void *dd)
 	py = data->p.y;
 	if (ky == 65307)
 		exit(11);
-	x = 0;
-	y = 0;
-	x += (ky == 65362 || ky == 'a') * 5 + (ky == 65364 || ky == 'd') * -5;
-	y += (ky == 65362 || ky == 'w') * 5 + (ky == 65364 || ky == 's') * -5;
-	data->p.x += cos(data->p.rotaion) * x;
-	data->p.y += sin(data->p.rotaion) * y;
+	x = (ky == 65362 || ky == 'd') + -(ky == 65364 || ky == 'a');
+	y = (ky == 65362 || ky == 'w') + -(ky == 65364 || ky == 's');
+	data->p.x += cos(data->p.rotaion) * x * data->p.movespeed;
+	data->p.y += sin(data->p.rotaion) * y * data->p.movespeed;
 	data->p.rotaion += (ky == 65363) * 0.174533 + (ky == 65361) * -0.174533;
 	if (check_wall(data, data->p.x, data->p.y))
 	{
@@ -266,7 +264,7 @@ int	main(int ac, char **av)
 	p.y = map.y * data.size - 16;
 	p.rotaion = (90) * (pi / 180);
 	p.turnDer = 0;
-	p.movespeed = 3.0;
+	p.movespeed = 7.0;
 	p.rot_speed = p.rotaion;
 	data.p = p;
 	data.x_win = map.x_win * data.size;
