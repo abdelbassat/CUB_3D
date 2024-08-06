@@ -66,7 +66,8 @@ typedef struct s_data
 {
 	int x_line;
 	int y_line;
-	int keys[2];
+	int keys[4];
+	double rot;
 	int			x_win;
 	int			y_win;
 	void		*mlx;
